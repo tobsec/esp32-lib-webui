@@ -57,17 +57,19 @@ httpd_handle_t start(const Config& cfg) {
     g_routes.clear();
 
     httpd_config_t hcfg = HTTPD_DEFAULT_CONFIG();
-    hcfg.server_port    = cfg.port;
+    hcfg.server_port      = cfg.port;
+    hcfg.stack_size       = cfg.http_stack_size;
     hcfg.max_uri_handlers = 16;       // covers shared + project routes
     hcfg.lru_purge_enable = true;     // free oldest socket when full
-    hcfg.uri_match_fn   = httpd_uri_match_wildcard;
+    hcfg.uri_match_fn     = httpd_uri_match_wildcard;
 
     if (httpd_start(&g_server, &hcfg) != ESP_OK) {
         ESP_LOGE(kTag, "httpd_start failed");
         g_server = nullptr;
         return nullptr;
     }
-    ESP_LOGI(kTag, "started on port %u (realm=%s)", cfg.port, cfg.realm.c_str());
+    ESP_LOGI(kTag, "started on port %u (stack %u, realm=%s)",
+             cfg.port, static_cast<unsigned>(cfg.http_stack_size), cfg.realm.c_str());
     return g_server;
 }
 

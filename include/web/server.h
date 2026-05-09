@@ -29,6 +29,14 @@ struct Config {
     // HAP server and esp_http_server can't bind a second listener on
     // the same port. Override via Config{...}.port if needed.
     uint16_t    port  = 8080;
+    // Worker-task stack size. esp_http_server's default of 4096 B is
+    // tight for the OTA upload path: libsodium's
+    // crypto_sign_verify_detached + the streaming chunk handling +
+    // httpd's own per-request bookkeeping cumulatively eat 3-4 KB on
+    // multi-MB payloads. Bumped to 8 KB by default to leave comfortable
+    // headroom; raise it if you push a giant body and observe stack
+    // canaries. Lower it if you're tight on RAM and don't use OTA.
+    size_t      http_stack_size = 8 * 1024;
 };
 
 // Brings up esp_http_server with the supplied config. Returns the
