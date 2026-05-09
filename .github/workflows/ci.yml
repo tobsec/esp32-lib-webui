@@ -35,9 +35,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: tests/requirements.txt
 
       - name: Install deps
-        run: pip install pynacl pytest
+        run: pip install -r tests/requirements.txt
 
       - name: Run pytest
         run: pytest tests/ -v
