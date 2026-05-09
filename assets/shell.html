@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HomeKey Reader</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/vendor/pico.min.css">
+<link rel="stylesheet" href="/shell.css">
+<script defer src="/vendor/alpine.min.js"></script>
+</head>
+<body>
+<main class="container">
+  <hgroup>
+    <h2 id="device-name">HomeKey Reader</h2>
+    <p><small id="fw-version" class="muted">connecting…</small></p>
+  </hgroup>
+
+  <article x-data="status">
+    <header><strong>Status</strong></header>
+    <table>
+      <tbody>
+        <template x-for="entry in entries" :key="entry[0]">
+          <tr><th scope="row" x-text="entry[0]"></th><td x-text="entry[1]"></td></tr>
+        </template>
+        <tr x-show="error">
+          <td colspan="2"><kbd x-text="error"></kbd></td>
+        </tr>
+      </tbody>
+    </table>
+    <footer><small class="muted" x-text="freshness"></small></footer>
+  </article>
+
+  <div id="project-panels"></div>
+</main>
+
+<script src="/shell.js"></script>
+</body>
+</html>

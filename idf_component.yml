@@ -1,0 +1,22 @@
+version: "0.1.0"
+description: >
+  Embedded web UI / admin / signed-upload OTA component for ESP-IDF.
+  Provides an HTTP server with Basic-Auth middleware, a project-agnostic
+  /api/status endpoint with extension hooks, /api/reboot, and a
+  signed-upload OTA endpoint with Ed25519 verification.
+url: https://github.com/REPLACE_ME/esp32-lib-webui
+license: MIT
+
+dependencies:
+  idf: ">=5.5"
+  espressif/cjson: "^1.7"
+  espressif/libsodium: "^1.0"
+
+# tags don't carry meaning to the component manager but help discovery.
+tags:
+  - web
+  - ota
+  - admin
+  - http-server
+  - alpine
+  - pico-css

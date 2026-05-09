@@ -1,0 +1,23 @@
+esp32-lib-webui
+================================================================================
+Copyright (c) 2026 REPLACE_ME (project owner)
+Released under the MIT License (see LICENSE).
+
+This component embeds two third-party libraries verbatim from their upstream
+distributions. Their licenses live alongside the binaries.
+
+Pico CSS v2.0.6
+--------------------------------------------------------------------------------
+Path:    assets/vendor/pico/pico.min.css
+Source:  https://github.com/picocss/pico
+License: MIT (see assets/vendor/pico/LICENSE.md)
+
+Alpine.js v3.14.1
+--------------------------------------------------------------------------------
+Path:    assets/vendor/alpine/alpine.min.js
+Source:  https://github.com/alpinejs/alpine
+License: MIT (see assets/vendor/alpine/LICENSE.md)
+
+Both upstream licenses are MIT and compatible with this component's MIT
+license. Vendoring (rather than CDN-loading) keeps consumers offline-capable
+and version-pinned per firmware build.
