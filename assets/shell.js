@@ -129,6 +129,12 @@
   window.WebShell = { fetch_json, toast };
 
   // Pull project-specific HTML + JS once Alpine is up.
+  // Order matters: panels.js calls Alpine.data("uids", ...) etc. to
+  // register components, and Alpine.initTree(slot) processes the
+  // x-data="uids" attributes on the freshly-injected DOM. If we
+  // initTree BEFORE panels.js executes, every x-data is undefined and
+  // Alpine throws "uids/ota/device is not defined" for every binding.
+  // Load panels.js first, await its execution, THEN initTree.
   async function load_project_panels() {
     try {
       const r = await fetch("/panels.html");
@@ -136,12 +142,19 @@
       const html = await r.text();
       const slot = $("#project-panels");
       slot.innerHTML = html;
+
+      // Load + execute panels.js synchronously (well, async-await).
+      // If the project doesn't ship one, missing /panels.js is OK —
+      // resolve() the promise either way so initTree still runs.
+      await new Promise((resolve) => {
+        const s = document.createElement("script");
+        s.src = "/panels.js";
+        s.onload  = resolve;
+        s.onerror = resolve;  // 404 is fine; no project-specific Alpine.data
+        document.body.appendChild(s);
+      });
+
       if (window.Alpine) Alpine.initTree(slot);
-      // Now the project script — its alpine:init listener may have
-      // already fired before injection, so we register stores here.
-      const s = document.createElement("script");
-      s.src = "/panels.js";
-      document.body.appendChild(s);
     } catch (_) { /* panels are optional */ }
   }
 
