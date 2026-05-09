@@ -1,0 +1,5 @@
+# Test dependencies for the host-side pytest suite.
+# Pin loosely — we just want recent enough that PyNaCl wraps the
+# current libsodium ABI and pytest understands @pytest.mark.parametrize.
+pynacl>=1.5
+pytest>=7.0
