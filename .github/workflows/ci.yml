@@ -1,0 +1,58 @@
+name: CI
+
+# Runner-budget conservative:
+# - No per-PR run (PR diff is reviewed locally; CI only confirms main).
+# - Concurrency cancels stale runs on rapid push.
+# - Single ESP-IDF target (esp32s3 — the consumer family). Other
+#   targets compile-test as a manual dispatch when needed.
+# - Job 1 is plain ubuntu-latest pytest (~30 s).
+# - Job 2 is the heavyweight ESP-IDF build (~3-5 min container).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      idf_target:
+        description: "ESP-IDF target chip"
+        required: false
+        default: "esp32s3"
+        type: choice
+        options: [esp32s3, esp32, esp32c3, esp32c6, esp32s2]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest (host crypto)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install deps
+        run: pip install pynacl pytest
+
+      - name: Run pytest
+        run: pytest tests/ -v
+
+  build-minimal:
+    name: build minimal example (${{ github.event.inputs.idf_target || 'esp32s3' }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: ESP-IDF build
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.5.4
+          target: ${{ github.event.inputs.idf_target || 'esp32s3' }}
+          path: examples/minimal
