@@ -16,3 +16,7 @@ sdkconfig.old
 *.log
 *.bak
 .component_hash
+
+# Python bytecode (pytest, ota_sign.py)
+__pycache__/
+*.pyc
