@@ -6,7 +6,7 @@
 
 #include "web/auth.h"
 
-namespace reader_core::web {
+namespace webui {
 
 namespace {
 
@@ -104,4 +104,4 @@ esp_err_t register_route(httpd_handle_t       server,
     return err;
 }
 
-}  // namespace reader_core::web
+}  // namespace webui

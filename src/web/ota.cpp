@@ -13,7 +13,7 @@
 
 #include "web/server.h"
 
-namespace reader_core::web::ota {
+namespace webui::ota {
 
 namespace {
 
@@ -224,4 +224,4 @@ esp_err_t register_routes(httpd_handle_t server, const Config& cfg) {
     return register_route(server, HTTP_POST, "/api/ota/upload", handle_upload);
 }
 
-}  // namespace reader_core::web::ota
+}  // namespace webui::ota

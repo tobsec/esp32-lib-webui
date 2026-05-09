@@ -17,7 +17,7 @@
 
 #include <functional>
 
-namespace reader_core::web::status_core {
+namespace webui::status_core {
 
 // Lambda type. Invoked for every /api/status request. The provider
 // must mutate the supplied cJSON object only by adding fields — do
@@ -32,4 +32,4 @@ esp_err_t register_routes(httpd_handle_t server);
 // (default) to remove a previously installed provider.
 void set_provider(Provider p = {});
 
-}  // namespace reader_core::web::status_core
+}  // namespace webui::status_core

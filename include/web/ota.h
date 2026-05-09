@@ -26,7 +26,7 @@
 #include <esp_err.h>
 #include <esp_http_server.h>
 
-namespace reader_core::web::ota {
+namespace webui::ota {
 
 struct Config {
     // 32-byte ed25519 verification public key. Lives in secrets.h
@@ -70,4 +70,4 @@ esp_err_t register_routes(httpd_handle_t server, const Config& cfg);
 // HK_OTA_SIGNING_PUBKEY define from secrets.h into Config.pubkey.
 bool parse_pubkey_hex(const char* hex, uint8_t out[32]);
 
-}  // namespace reader_core::web::ota
+}  // namespace webui::ota

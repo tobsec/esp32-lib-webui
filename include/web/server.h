@@ -8,7 +8,7 @@
 // Project-specific glue (web_ui_glue.cpp) is responsible for calling
 // start() once Wi-Fi is up and then registering whatever
 // project-specific routes it needs alongside the common routes that
-// reader_core/web/status_core.cpp + reader_core/web/system_routes.cpp
+// src/web/status_core.cpp + src/web/system_routes.cpp
 // install themselves.
 
 #include <esp_err.h>
@@ -16,7 +16,7 @@
 
 #include <string>
 
-namespace reader_core::web {
+namespace webui {
 
 struct Config {
     // Basic-Auth credentials. The handler returns 401 + WWW-Authenticate
@@ -61,4 +61,4 @@ esp_err_t register_route(httpd_handle_t       server,
 // /panels.html and /panels.js for its own UI fragments.
 esp_err_t register_shell_assets(httpd_handle_t server);
 
-}  // namespace reader_core::web
+}  // namespace webui
