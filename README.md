@@ -46,18 +46,18 @@ In your `main/main.cpp` after Wi-Fi connects:
 #include "web/system_routes.h"
 #include "web/ota.h"
 
-reader_core::web::Config cfg;
+webui::Config cfg;
 cfg.user = "admin";
 cfg.pass = "secret";       // pull from your secrets.h
-auto server = reader_core::web::start(cfg);
+auto server = webui::start(cfg);
 
-reader_core::web::register_shell_assets(server);
-reader_core::web::status_core::register_routes(server);
-reader_core::web::system_routes::register_routes(server);
+webui::register_shell_assets(server);
+webui::status_core::register_routes(server);
+webui::system_routes::register_routes(server);
 
-reader_core::web::ota::Config ota_cfg{};
-reader_core::web::ota::parse_pubkey_hex("YOUR_64_HEX_CHARS", ota_cfg.pubkey);
-reader_core::web::ota::register_routes(server, ota_cfg);
+webui::ota::Config ota_cfg{};
+webui::ota::parse_pubkey_hex("YOUR_64_HEX_CHARS", ota_cfg.pubkey);
+webui::ota::register_routes(server, ota_cfg);
 
 // Project-specific routes go here — your /api/yourthing handlers, etc.
 ```
@@ -77,10 +77,6 @@ python tools/ota_sign.py build/<project>.bin
 ```
 
 The signed `.bin` is what you POST to `/api/ota/upload`. The reader verifies the trailing 64-byte Ed25519 signature against its compiled-in pubkey and, only on a match, flips its boot partition.
-
-## Naming
-
-The `reader_core::web` namespace dates from when this code lived inside `esp32-homekey/reader_core/`. Renaming it to something less project-specific (`webui::`) is a 0.2 task — don't grep for it in your project's headers if you write new glue from scratch.
 
 ## License
 

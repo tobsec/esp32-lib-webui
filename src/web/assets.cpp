@@ -1,5 +1,5 @@
 // Static-asset handlers for the shared web shell + vendored libraries.
-// Files are embedded into reader_core via EMBED_TXTFILES in
+// Files are embedded into the component via EMBED_TXTFILES in
 // CMakeLists.txt; the linker exports each file's _binary_*_start /
 // _binary_*_end symbols, and we hand the buffer (minus the trailing
 // NUL terminator that EMBED_TXTFILES appends) to httpd_resp_send.
@@ -20,7 +20,7 @@ extern const char pico_min_css_end[]      asm("_binary_pico_min_css_end");
 extern const char alpine_min_js_start[]   asm("_binary_alpine_min_js_start");
 extern const char alpine_min_js_end[]     asm("_binary_alpine_min_js_end");
 
-namespace reader_core::web {
+namespace webui {
 
 namespace {
 
@@ -61,4 +61,4 @@ esp_err_t register_shell_assets(httpd_handle_t server) {
     return ESP_OK;
 }
 
-}  // namespace reader_core::web
+}  // namespace webui

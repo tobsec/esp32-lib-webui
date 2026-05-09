@@ -8,7 +8,7 @@
 
 #include "web/server.h"
 
-namespace reader_core::web::auth {
+namespace webui::auth {
 
 namespace {
 
@@ -87,4 +87,4 @@ esp_err_t check_basic(httpd_req_t* req) {
     return ESP_OK;
 }
 
-}  // namespace reader_core::web::auth
+}  // namespace webui::auth

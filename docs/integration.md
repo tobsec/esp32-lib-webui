@@ -76,19 +76,19 @@ The pubkey hex is what `tools/ota_sign.py` prints on first run.
 #include "web/ota.h"
 
 void start_web_ui() {
-    reader_core::web::Config cfg;
+    webui::Config cfg;
     cfg.user = WEBUI_USER;
     cfg.pass = WEBUI_PASS;
-    auto server = reader_core::web::start(cfg);
+    auto server = webui::start(cfg);
     if (!server) return;
 
-    reader_core::web::register_shell_assets(server);
-    reader_core::web::status_core::register_routes(server);
-    reader_core::web::system_routes::register_routes(server);
+    webui::register_shell_assets(server);
+    webui::status_core::register_routes(server);
+    webui::system_routes::register_routes(server);
 
-    reader_core::web::ota::Config ota_cfg{};
-    if (reader_core::web::ota::parse_pubkey_hex(OTA_SIGNING_PUBKEY, ota_cfg.pubkey)) {
-        reader_core::web::ota::register_routes(server, ota_cfg);
+    webui::ota::Config ota_cfg{};
+    if (webui::ota::parse_pubkey_hex(OTA_SIGNING_PUBKEY, ota_cfg.pubkey)) {
+        webui::ota::register_routes(server, ota_cfg);
     }
 
     // Project-specific routes go here.

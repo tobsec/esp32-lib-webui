@@ -7,7 +7,7 @@
 #include <esp_err.h>
 #include <esp_http_server.h>
 
-namespace reader_core::web::auth {
+namespace webui::auth {
 
 // Checks the Authorization header against the credentials stored in
 // the active web::Config. If the request authenticates, returns
@@ -17,4 +17,4 @@ namespace reader_core::web::auth {
 // the server doesn't double-respond.
 esp_err_t check_basic(httpd_req_t* req);
 
-}  // namespace reader_core::web::auth
+}  // namespace webui::auth

@@ -7,7 +7,7 @@
 
 #include "web/server.h"
 
-namespace reader_core::web::system_routes {
+namespace webui::system_routes {
 
 namespace {
 
@@ -34,4 +34,4 @@ esp_err_t register_routes(httpd_handle_t server) {
     return register_route(server, HTTP_POST, "/api/reboot", handle_reboot);
 }
 
-}  // namespace reader_core::web::system_routes
+}  // namespace webui::system_routes

@@ -9,8 +9,8 @@
 #include <esp_err.h>
 #include <esp_http_server.h>
 
-namespace reader_core::web::system_routes {
+namespace webui::system_routes {
 
 esp_err_t register_routes(httpd_handle_t server);
 
-}  // namespace reader_core::web::system_routes
+}  // namespace webui::system_routes
