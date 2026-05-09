@@ -33,9 +33,9 @@ In your project's `main/idf_component.yml`:
 ```yaml
 dependencies:
   idf: ">=5.5"
-  REPLACE_ME/esp32-lib-webui:
+  tobsec/esp32-lib-webui:
     version: ">=0.1"
-    git: https://github.com/REPLACE_ME/esp32-lib-webui.git
+    git: https://github.com/tobsec/esp32-lib-webui.git
 ```
 
 In your `main/main.cpp` after Wi-Fi connects:

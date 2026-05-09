@@ -10,9 +10,9 @@ In your project's `main/idf_component.yml`:
 ```yaml
 dependencies:
   idf: ">=5.5"
-  REPLACE_ME/esp32-lib-webui:
+  tobsec/esp32-lib-webui:
     version: ">=0.1"
-    git: https://github.com/REPLACE_ME/esp32-lib-webui.git
+    git: https://github.com/tobsec/esp32-lib-webui.git
 ```
 
 `idf.py reconfigure` resolves the dependency, clones the repo into
@@ -25,7 +25,7 @@ Pin to a specific commit by adding `commit: abc1234` next to `git:`.
 
 ```bash
 mkdir -p components
-git submodule add https://github.com/REPLACE_ME/esp32-lib-webui.git components/esp32-lib-webui
+git submodule add https://github.com/tobsec/esp32-lib-webui.git components/esp32-lib-webui
 ```
 
 In your top-level `CMakeLists.txt`:
