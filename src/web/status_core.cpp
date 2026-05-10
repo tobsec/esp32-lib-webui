@@ -18,18 +18,26 @@ Provider g_provider;
 
 const char* reset_reason_str(esp_reset_reason_t r) {
     switch (r) {
-        case ESP_RST_UNKNOWN:   return "unknown";
-        case ESP_RST_POWERON:   return "poweron";
-        case ESP_RST_EXT:       return "ext";
-        case ESP_RST_SW:        return "sw";
-        case ESP_RST_PANIC:     return "panic";
-        case ESP_RST_INT_WDT:   return "int_wdt";
-        case ESP_RST_TASK_WDT:  return "task_wdt";
-        case ESP_RST_WDT:       return "wdt";
-        case ESP_RST_DEEPSLEEP: return "deepsleep";
-        case ESP_RST_BROWNOUT:  return "brownout";
-        case ESP_RST_SDIO:      return "sdio";
-        default:                return "?";
+        case ESP_RST_UNKNOWN:    return "unknown";
+        case ESP_RST_POWERON:    return "poweron";
+        case ESP_RST_EXT:        return "ext";
+        case ESP_RST_SW:         return "sw";
+        case ESP_RST_PANIC:      return "panic";
+        case ESP_RST_INT_WDT:    return "int_wdt";
+        case ESP_RST_TASK_WDT:   return "task_wdt";
+        case ESP_RST_WDT:        return "wdt";
+        case ESP_RST_DEEPSLEEP:  return "deepsleep";
+        case ESP_RST_BROWNOUT:   return "brownout";
+        case ESP_RST_SDIO:       return "sdio";
+        // Added in IDF 5.x — ESP_RST_USB triggers on USB-JTAG-Serial
+        // reset (the typical dev-board reflash path), which previously
+        // bubbled up as "?" on every freshly-flashed board.
+        case ESP_RST_USB:        return "usb";
+        case ESP_RST_JTAG:       return "jtag";
+        case ESP_RST_EFUSE:      return "efuse";
+        case ESP_RST_PWR_GLITCH: return "pwr_glitch";
+        case ESP_RST_CPU_LOCKUP: return "cpu_lockup";
+        default:                 return "?";
     }
 }
 
