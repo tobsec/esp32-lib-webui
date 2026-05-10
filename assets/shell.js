@@ -129,24 +129,22 @@
   window.WebShell = { fetch_json, toast };
 
   // Pull project-specific HTML + JS once Alpine is up.
-  // Order matters: panels.js calls Alpine.data("uids", ...) etc. to
-  // register components, and Alpine.initTree(slot) processes the
-  // x-data="uids" attributes on the freshly-injected DOM. If we
-  // initTree BEFORE panels.js executes, every x-data is undefined and
-  // Alpine throws "uids/ota/device is not defined" for every binding.
-  // Load panels.js first, await its execution, THEN initTree.
+  //
+  // Order matters: panels.js MUST finish executing before we inject
+  // panels.html into the DOM. Alpine has a global MutationObserver
+  // that automatically walks newly-inserted nodes; the moment an
+  // x-data="uids" attribute lands in the document, Alpine looks up
+  // Alpine.data("uids", ...) and throws "uids is not defined" if
+  // the registration hasn't happened yet. innerHTML assignment
+  // *itself* is what triggers the walk — calling Alpine.initTree
+  // afterwards is too late.
+  //
+  // So: kick off both fetches in parallel, await the script, *then*
+  // inject the HTML.
   async function load_project_panels() {
     try {
-      const r = await fetch("/panels.html");
-      if (!r.ok) return;
-      const html = await r.text();
-      const slot = $("#project-panels");
-      slot.innerHTML = html;
-
-      // Load + execute panels.js synchronously (well, async-await).
-      // If the project doesn't ship one, missing /panels.js is OK —
-      // resolve() the promise either way so initTree still runs.
-      await new Promise((resolve) => {
+      const html_p = fetch("/panels.html").then(r => r.ok ? r.text() : null);
+      const js_p = new Promise((resolve) => {
         const s = document.createElement("script");
         s.src = "/panels.js";
         s.onload  = resolve;
@@ -154,7 +152,11 @@
         document.body.appendChild(s);
       });
 
-      if (window.Alpine) Alpine.initTree(slot);
+      await js_p;
+
+      const html = await html_p;
+      if (html === null) return;
+      $("#project-panels").innerHTML = html;
     } catch (_) { /* panels are optional */ }
   }
 
