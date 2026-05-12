@@ -37,6 +37,12 @@ struct Config {
     // headroom; raise it if you push a giant body and observe stack
     // canaries. Lower it if you're tight on RAM and don't use OTA.
     size_t      http_stack_size = 8 * 1024;
+    // Upper bound on registered (uri, method) handlers. esp_http_server
+    // refuses to register beyond this. 16 covers a typical project (a
+    // handful of system routes + 4-6 project routes); bump for projects
+    // with finer-grained REST APIs (PATCH-by-cell, sub-resource
+    // collections, etc.). Each slot costs ~32 B.
+    uint8_t     max_uri_handlers = 16;
 };
 
 // Brings up esp_http_server with the supplied config. Returns the
@@ -63,6 +69,16 @@ esp_err_t register_route(httpd_handle_t       server,
                          const char*          uri,
                          esp_err_t (*handler)(httpd_req_t*),
                          void*                ctx = nullptr);
+
+// Same as register_route() but skips the Basic-Auth middleware. Intended
+// for setup-flow endpoints that must be reachable before the user has
+// configured credentials (e.g. POST /api/setup-password, GET /api/auth-status).
+// Use sparingly — a public route is reachable by anyone on the network.
+esp_err_t register_public_route(httpd_handle_t       server,
+                                httpd_method_t       method,
+                                const char*          uri,
+                                esp_err_t (*handler)(httpd_req_t*),
+                                void*                ctx = nullptr);
 
 // Registers GET / + GET /shell.css + GET /shell.js handlers backed by
 // the embedded shell assets. Project glue still has to register
