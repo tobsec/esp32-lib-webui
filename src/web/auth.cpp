@@ -1,6 +1,8 @@
 #include "web/auth.h"
 
 #include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include <mbedtls/base64.h>
 
 #include <cstring>
@@ -13,6 +15,34 @@ namespace webui::auth {
 namespace {
 
 constexpr const char* kTag = "web_auth";
+
+// Active credentials. Seeded from Config at start() time, mutated at
+// runtime via set_active_credentials() once a user sets / changes their
+// password via /api/setup-password or the controller console.
+struct ActiveCreds {
+    std::string       user;
+    std::string       pass;
+    SemaphoreHandle_t lock;
+};
+ActiveCreds s_active = {};
+
+void ensure_lock() {
+    if (!s_active.lock) s_active.lock = xSemaphoreCreateMutex();
+}
+
+void seed_from_config_if_unset() {
+    // First call after webui::start(): pick up whatever start() stashed
+    // in the Config. set_active_credentials() may overwrite later.
+    ensure_lock();
+    if (xSemaphoreTake(s_active.lock, portMAX_DELAY) == pdTRUE) {
+        if (s_active.user.empty() && s_active.pass.empty()) {
+            const auto& cfg = config();
+            s_active.user = cfg.user;
+            s_active.pass = cfg.pass;
+        }
+        xSemaphoreGive(s_active.lock);
+    }
+}
 
 // Constant-time string compare. Avoids leaking the prefix length of
 // the secret on a timing oracle. Returns true on equal length+bytes.
@@ -35,16 +65,46 @@ esp_err_t send_401(httpd_req_t* req) {
 
 }  // namespace
 
-esp_err_t check_basic(httpd_req_t* req) {
-    const auto& cfg = config();
+void set_active_credentials(const std::string& user, const std::string& pass) {
+    ensure_lock();
+    if (xSemaphoreTake(s_active.lock, portMAX_DELAY) == pdTRUE) {
+        s_active.user = user;
+        s_active.pass = pass;
+        xSemaphoreGive(s_active.lock);
+    }
+    ESP_LOGI(kTag, "active credentials updated (secured=%s)",
+             (!user.empty() && !pass.empty()) ? "yes" : "no");
+}
 
-    // No credentials configured = wide open. The standalone build
-    // currently always sets these via secrets.h; bailing out here
-    // protects future projects that haven't filled the config yet
-    // (we'd rather refuse than silently allow).
-    if (cfg.user.empty() || cfg.pass.empty()) {
-        ESP_LOGW(kTag, "auth misconfigured (empty user/pass) — denying");
-        return send_401(req);
+bool is_secured() {
+    seed_from_config_if_unset();
+    bool secured = false;
+    if (xSemaphoreTake(s_active.lock, portMAX_DELAY) == pdTRUE) {
+        secured = !s_active.user.empty() && !s_active.pass.empty();
+        xSemaphoreGive(s_active.lock);
+    }
+    return secured;
+}
+
+esp_err_t check_basic(httpd_req_t* req) {
+    seed_from_config_if_unset();
+
+    // Snapshot active credentials under the lock so we don't read
+    // half-updated state while compare runs.
+    std::string user, pass;
+    if (xSemaphoreTake(s_active.lock, portMAX_DELAY) == pdTRUE) {
+        user = s_active.user;
+        pass = s_active.pass;
+        xSemaphoreGive(s_active.lock);
+    }
+
+    // Open-until-secured: when no password is set, every route is
+    // freely reachable. Controller-side glue is expected to render an
+    // in-UI banner directing the user to /api/setup-password. Once
+    // they set credentials we switch into the standard Basic-Auth
+    // path below.
+    if (user.empty() || pass.empty()) {
+        return ESP_OK;
     }
 
     const size_t hdr_len = httpd_req_get_hdr_value_len(req, "Authorization");
@@ -80,8 +140,8 @@ esp_err_t check_basic(httpd_req_t* req) {
     const size_t pass_len = decoded_len - user_len - 1;
 
     if (!ct_equal(reinterpret_cast<const char*>(decoded), user_len,
-                  cfg.user.data(), cfg.user.size()) ||
-        !ct_equal(pass_ptr, pass_len, cfg.pass.data(), cfg.pass.size())) {
+                  user.data(), user.size()) ||
+        !ct_equal(pass_ptr, pass_len, pass.data(), pass.size())) {
         return send_401(req);
     }
     return ESP_OK;
