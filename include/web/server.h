@@ -38,11 +38,15 @@ struct Config {
     // canaries. Lower it if you're tight on RAM and don't use OTA.
     size_t      http_stack_size = 8 * 1024;
     // Upper bound on registered (uri, method) handlers. esp_http_server
-    // refuses to register beyond this. 16 covers a typical project (a
-    // handful of system routes + 4-6 project routes); bump for projects
-    // with finer-grained REST APIs (PATCH-by-cell, sub-resource
-    // collections, etc.). Each slot costs ~32 B.
-    uint8_t     max_uri_handlers = 16;
+    // refuses to register beyond this. The lib's register_shell_assets
+    // alone takes 9 slots (index + shell.{css,js} + webui.{css,js} +
+    // themes/{dark,light}.css + vendor/{pico.min.css, alpine.min.js});
+    // status_core / system_routes / auth / ota together claim another
+    // 5-7. 24 leaves comfortable room for a handful of project routes
+    // before requiring an explicit bump; projects with finer-grained
+    // REST APIs (PATCH-by-cell, sub-resource collections, etc.) should
+    // pass cfg.max_uri_handlers = 32+ on start(). Each slot costs ~32 B.
+    uint8_t     max_uri_handlers = 24;
 };
 
 // Brings up esp_http_server with the supplied config. Returns the
