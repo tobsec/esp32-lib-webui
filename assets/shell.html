@@ -1,20 +1,39 @@
 <!doctype html>
-<html lang="en" data-theme="auto">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HomeKey Reader</title>
+<title>Web UI</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/vendor/pico.min.css">
-<link rel="stylesheet" href="/shell.css">
+<link rel="stylesheet" href="/webui.css">
+<link rel="stylesheet" href="/themes/dark.css">
+<link rel="stylesheet" href="/themes/light.css">
+<!-- Optional project-supplied theme. The lib serves a 404 if the
+     consumer didn't ship one; the inline error handler then drops
+     the <link> so the network panel stays quiet. -->
+<link rel="stylesheet" href="/theme.css" onerror="this.remove()">
+<script>
+  // Apply the persisted theme before paint so there's no flash of
+  // wrong colours on a fresh tab. localStorage is sandboxed per
+  // origin; a fresh device starts in dark by default.
+  document.documentElement.dataset.theme =
+    (localStorage.getItem("webui-theme") || "dark");
+</script>
 <script defer src="/vendor/alpine.min.js"></script>
 </head>
 <body>
-<main class="container">
-  <hgroup>
-    <h2 id="device-name">HomeKey Reader</h2>
-    <p><small id="fw-version" class="muted">connecting…</small></p>
-  </hgroup>
+
+<header class="webui-header">
+  <span class="webui-dot" id="webui-status-dot"></span>
+  <h1 id="webui-title">Web UI</h1>
+  <button type="button" class="webui-theme-toggle" title="Toggle theme"
+          onclick="webui.theme.toggle()">◐</button>
+</header>
+
+<nav class="webui-tabs" id="webui-tab-nav" style="display:none"></nav>
+
+<main class="webui-container">
 
   <article x-data="status">
     <header><strong>Status</strong></header>
@@ -28,12 +47,17 @@
         </tr>
       </tbody>
     </table>
-    <footer><small class="muted" x-text="freshness"></small></footer>
+    <footer><small class="webui-muted" x-text="freshness"></small></footer>
   </article>
 
+  <!-- Project panels land here. If they declare data-tab=" " attributes
+       webui.tabs.discover() builds the nav strip above; otherwise the
+       panels render in document order. -->
   <div id="project-panels"></div>
+
 </main>
 
+<script src="/webui.js"></script>
 <script src="/shell.js"></script>
 </body>
 </html>

@@ -1,0 +1,27 @@
+/* Light theme — Pico's defaults plus the webui-* tokens.
+ *
+ * Activated by switching the document to `<html data-theme="light">`.
+ * The toggle button in the shell header flips this back and forth and
+ * persists the choice to localStorage. */
+
+:root[data-theme="light"] {
+  /* Pico's own light defaults apply because we don't override the
+   * --pico-* tokens here; CSS-variable fallback walks back to Pico's
+   * :root declaration. Only the webui-* tokens need re-binding. */
+  --webui-bg:           #fafafa;
+  --webui-text:         #1a1a1a;
+  --webui-muted:        #6c757d;
+  --webui-header-bg:    #ffffff;
+  --webui-card-bg:      #ffffff;
+  --webui-divider:      #e5e7eb;
+  --webui-row-divider:  #e5e7eb88;
+  --webui-row-hover:    #f3f4f655;
+  --webui-accent:       #c73650;
+  --webui-accent-hover: #a52a40;
+  --webui-mono-bg:      #f5f5f5;
+  --webui-bar-off:      #d1d5db;
+  --webui-ok:           #1a7f37;
+  --webui-ok-fg:        #1b5e20;
+  --webui-err:          #cf222e;
+  --webui-err-fg:       #b71c1c;
+}

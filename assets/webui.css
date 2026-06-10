@@ -1,0 +1,232 @@
+/* esp32-lib-webui — visual primitives layered on top of Pico CSS.
+ *
+ * All colour / spacing / radius / typography values are CSS custom
+ * properties (var(--*)) so the active theme can override them without
+ * touching the component rules.
+ *
+ * Layer split:
+ *   pico.min.css      base components (forms, buttons, tables, cards)
+ *   webui.css         additions Pico doesn't ship — tabs, signal bar,
+ *                     log pane, AT-console grid, status dot, header
+ *   themes/dark.css   --webui-* + --pico-* overrides for the default
+ *                     dark palette (derived from the original bb-comm-
+ *                     gw look but generically named so other consumers
+ *                     can reuse it verbatim)
+ *   themes/light.css  the same overrides re-tuned for a light palette
+ *   theme.css         OPTIONAL — project-supplied custom theme
+ *                     registered via EMBED_TXTFILES, served at /theme.css
+ *
+ * Consumers select the active theme via the `data-theme` attribute on
+ * <html>. Shell.js persists the user's choice to localStorage and the
+ * inline boot script sets the attribute before paint to avoid FOUC.
+ */
+
+/* ----- Top-level layout ------------------------------------------- */
+
+body > .webui-container {
+  max-width: var(--webui-container-max, 960px);
+  margin-inline: auto;
+  padding: var(--webui-container-pad, 1rem);
+}
+
+/* ----- Header (title + status dot + theme switch) ----------------- */
+
+.webui-header {
+  background: var(--webui-header-bg, var(--pico-card-background-color));
+  border-bottom: 1px solid var(--webui-divider, var(--pico-card-border-color));
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.webui-header h1 {
+  font-size: 1.05rem;
+  margin: 0;
+  color: var(--webui-accent, var(--pico-primary));
+  flex: 1;
+}
+
+.webui-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--webui-dot-off, var(--pico-muted-color));
+  flex-shrink: 0;
+}
+
+.webui-dot.on {
+  background: var(--webui-ok, #4caf50);
+}
+
+/* Theme switcher button — minimal, sits on the right of the header. */
+.webui-theme-toggle {
+  background: transparent;
+  border: 1px solid var(--webui-divider, var(--pico-card-border-color));
+  color: var(--webui-muted, var(--pico-muted-color));
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.webui-theme-toggle:hover { color: var(--webui-accent, var(--pico-primary)); }
+
+/* ----- Tab navigation --------------------------------------------- */
+
+.webui-tabs {
+  display: flex;
+  background: var(--webui-header-bg, var(--pico-card-background-color));
+  border-bottom: 1px solid var(--webui-divider, var(--pico-card-border-color));
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.webui-tab {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  color: var(--webui-muted, var(--pico-muted-color));
+  font-size: 0.85rem;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  text-decoration: none;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.webui-tab:hover {
+  color: var(--webui-text, var(--pico-color));
+}
+
+.webui-tab.active {
+  color: var(--webui-accent, var(--pico-primary));
+  border-bottom-color: var(--webui-accent, var(--pico-primary));
+}
+
+/* A panel only renders when its data-tab matches the active tab; the
+ * tab manager toggles .active on the chosen panel. */
+.webui-panel { display: none; }
+.webui-panel.active { display: block; }
+
+/* ----- Signal bar (multi-segment, for RSSI/CSQ) ------------------- */
+
+.webui-signal-bar {
+  display: inline-flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 18px;
+}
+
+.webui-signal-bar > span {
+  width: 5px;
+  background: var(--webui-bar-off, var(--pico-muted-color));
+  border-radius: 1px;
+  opacity: 0.4;
+}
+
+.webui-signal-bar > span.on {
+  background: var(--webui-ok, #4caf50);
+  opacity: 1;
+}
+
+/* ----- Log pane (monospace pre-wrap with scroll) ------------------ */
+
+.webui-log-pane {
+  background: var(--webui-mono-bg, var(--pico-code-background-color));
+  border: 1px solid var(--webui-divider, var(--pico-card-border-color));
+  border-radius: var(--pico-border-radius);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--pico-font-family-monospace);
+  font-size: 0.78rem;
+  max-height: 18rem;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 6rem;
+  margin: 0;
+}
+
+/* ----- Toast (already in shell.css, moved here as a primitive) ---- */
+
+.webui-toasts {
+  position: fixed;
+  top: 1rem; right: 1rem;
+  z-index: 1000;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  pointer-events: none;
+}
+
+.webui-toast {
+  padding: 0.6rem 1rem;
+  border-radius: var(--pico-border-radius);
+  background: var(--webui-card-bg, var(--pico-card-background-color));
+  border: 1px solid var(--webui-divider, var(--pico-card-border-color));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.9rem;
+  pointer-events: auto;
+}
+
+.webui-toast.ok    { border-color: var(--webui-ok,  #4caf50); }
+.webui-toast.error { border-color: var(--webui-err, #e94560); }
+
+/* ----- AT console grid (single-line input + history pane) --------- */
+
+.webui-at-console {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.5rem;
+}
+
+.webui-at-console-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.webui-at-console-input input {
+  flex: 1;
+  margin-bottom: 0;
+  font-family: var(--pico-font-family-monospace);
+}
+
+.webui-at-console-input button {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ----- Spinner ----------------------------------------------------- */
+
+.webui-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--webui-divider, var(--pico-card-border-color));
+  border-top-color: var(--webui-accent, var(--pico-primary));
+  border-radius: 50%;
+  animation: webui-spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes webui-spin { to { transform: rotate(360deg); } }
+
+/* ----- Small helpers used across factory components --------------- */
+
+.webui-muted { color: var(--webui-muted, var(--pico-muted-color)); font-size: 0.85em; }
+.webui-mono  { font-family: var(--pico-font-family-monospace); }
+
+/* Compact buttons inside table rows — copied from the original
+ * shell.css. Pico's default button styling is too tall for inline use. */
+table button,
+table [role="button"] {
+  margin-block: 0;
+  padding-block: 0.25rem;
+  padding-inline: 0.6rem;
+  width: auto;
+}

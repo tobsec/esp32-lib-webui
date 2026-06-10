@@ -17,11 +17,16 @@ Pre-1.0. The API is stable enough that a consumer project (`esp32-homekey`) live
 
 ## Design philosophy
 
-Project-specific tabs, business panels, and product-flavoured admin pages live in the **consumer project**, not in this library. The lib provides infrastructure only — HTTP server bootstrap, Basic-Auth middleware, OTA, status core extension, embedded shell + Pico + Alpine. Consumers ship their own `panels.html` + `panels.js` via `EMBED_TXTFILES` and inject them through the panel-injection mechanism.
+The lib is a **toolkit**, not a finished application. It ships the bits that every embedded admin UI needs verbatim — HTTP server bootstrap, Basic-Auth, signed-upload OTA, a `/api/status` core, a tab-capable HTML shell, a Pico+Alpine bundle, a default dark and light theme, and a small set of CSS + JS primitives (`webui.css`, `webui.js`) that cover the visual and behavioural patterns that recur across embedded gateways: tab navigation, status polling, signal bars, log panes, toasts, theme switching.
 
-The lib will not grow project-specific routes (e.g. a SIM7080G AT console, a multi-reader status grid, a Victron MPPT panel). When a candidate feature comes up, the test is: *would two unrelated consumer projects both want this verbatim?* If no — it stays in the consumer.
+What lives in the **consumer project**, not in the lib:
+- The actual list of tabs and their compositions — a Status tab built from which KPI rows, an AT-Console tab pointed at which endpoint, a Devices tab consuming which payload schema. These are project decisions, expressed in `panels.html` / `panels.js`.
+- The REST endpoints behind those tabs. The lib never grows a `/api/at` or `/api/cellular/operators` route; those belong to the project that owns the modem.
+- Project-specific themes. If a consumer wants a brand palette, it ships its own `theme.css` via `EMBED_TXTFILES` registering itself as a new `[data-theme="myproject"]` block and overriding the `--webui-*` and `--pico-*` tokens it cares about.
 
-This keeps the lib small, stable, and reusable. It also keeps consumer projects from inheriting features they don't want and from being entangled with each other's UX choices.
+When a candidate feature comes up, the test is at the right granularity: a generic primitive (KPI tile, log pane, AT-console widget, status polling factory) passes the *"would two unrelated consumer projects want this verbatim?"* test and belongs in the lib. A concrete composition (the Brachberg gateway's Status tab with these exact eight fields wired to those exact endpoints) fails the test and stays in the consumer.
+
+This split keeps the lib small enough to be a reusable dependency while still giving a fresh consumer enough material that its first-shot UI looks finished — not a naked Pico page that someone has to design from scratch.
 
 ## Repo layout
 

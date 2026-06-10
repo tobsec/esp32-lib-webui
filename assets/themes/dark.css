@@ -1,0 +1,55 @@
+/* Default dark theme — generic palette suitable for any embedded
+ * admin UI. Naming is project-agnostic; the original colour values
+ * trace back to the bb-comm-gw web UI but the lib treats them as
+ * just "a dark palette that ships out of the box".
+ *
+ * Activated by `<html data-theme="dark">` (set in the shell's inline
+ * boot script before paint). Override individual tokens from a
+ * project theme file by registering `[data-theme="dark"]` rules with
+ * higher specificity, or supply a fully-custom theme by declaring
+ * `[data-theme="myproject"]` and switching the attribute. */
+
+:root[data-theme="dark"] {
+  /* --- Pico overrides (apply to Pico's own components) ----------- */
+  --pico-background-color:                  #1a1a2e;
+  --pico-color:                             #e0e0e0;
+  --pico-muted-color:                       #888888;
+  --pico-card-background-color:             #16213e;
+  --pico-card-border-color:                 #0f3460;
+  --pico-card-sectioning-background-color:  #16213e;
+  --pico-code-background-color:             #0a0a1a;
+  --pico-code-color:                        #e0e0e0;
+  --pico-form-element-background-color:     #0a0a1a;
+  --pico-form-element-border-color:         #0f3460;
+  --pico-form-element-color:                #e0e0e0;
+  --pico-form-element-placeholder-color:    #555;
+  --pico-primary:                           #e94560;
+  --pico-primary-hover:                     #c73650;
+  --pico-primary-focus:                     rgba(233, 69, 96, 0.25);
+  --pico-primary-inverse:                   #ffffff;
+  --pico-secondary:                         #0f3460;
+  --pico-secondary-hover:                   #1a4a8a;
+  --pico-secondary-focus:                   rgba(15, 52, 96, 0.4);
+  --pico-secondary-inverse:                 #ffffff;
+  --pico-contrast:                          #ffffff;
+  --pico-color-green-500:                   #4caf50;
+  --pico-color-red-500:                     #e94560;
+
+  /* --- webui-specific tokens (used by webui.css + project themes) - */
+  --webui-bg:           #1a1a2e;
+  --webui-text:         #e0e0e0;
+  --webui-muted:        #888888;
+  --webui-header-bg:    #16213e;
+  --webui-card-bg:      #16213e;
+  --webui-divider:      #0f3460;
+  --webui-row-divider:  #0f346033;
+  --webui-row-hover:    #0f346033;
+  --webui-accent:       #e94560;
+  --webui-accent-hover: #c73650;
+  --webui-mono-bg:      #0a0a1a;
+  --webui-bar-off:      #333333;
+  --webui-ok:           #4caf50;
+  --webui-ok-fg:        #a5d6a7;
+  --webui-err:          #e94560;
+  --webui-err-fg:       #ef9a9a;
+}

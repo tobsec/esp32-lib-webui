@@ -27,6 +27,10 @@ idf_component_register(
         "assets/shell.html"
         "assets/shell.css"
         "assets/shell.js"
+        "assets/webui.css"
+        "assets/webui.js"
+        "assets/themes/dark.css"
+        "assets/themes/light.css"
         "assets/vendor/pico/pico.min.css"
         "assets/vendor/alpine/alpine.min.js"
 )

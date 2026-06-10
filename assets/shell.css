@@ -1,7 +1,11 @@
-/* Project-specific overrides on top of Pico CSS.
- * Keep this file small — Pico already covers typography, forms,
- * tables, cards (<article>), and dark-mode. Only land tweaks here
- * that Pico doesn't give us. */
+/* Shell-only residual CSS. Visual primitives + the toast / spinner /
+ * tab-strip / log-pane / signal-bar / AT-console live in webui.css.
+ * Theme tokens live in themes/*.css.
+ *
+ * What's left here: layout tweaks for the lib's built-in status card
+ * (rendered by shell.html before project panels) and the kind of
+ * Pico spacing nudges that don't belong in either webui.css or a
+ * theme file. */
 
 :root {
   --pico-form-element-spacing-vertical:   0.5rem;
@@ -9,45 +13,14 @@
   --pico-spacing:                         0.9rem;
 }
 
-body > main.container {
-  max-width: 760px;
-  padding-block: 1.5rem;
-}
-
-/* Compact buttons inside table rows so they don't dominate. */
-table button,
-table [role="button"] {
-  margin-block: 0;
-  padding-block: 0.25rem;
-  padding-inline: 0.6rem;
-  width: auto;
-}
-
-/* Status table layout — labels narrow, values fill. */
+/* Status table layout — narrow label column, value column fills. */
 article > table th { width: 12rem; }
 
-/* Subtle helper for muted hints (e.g. fw version, freshness). */
-.muted {
-  color: var(--pico-muted-color);
-  font-size: 0.85em;
+/* The header h1 in the lib shell holds the device name (set from
+ * /api/status). Keep it readable on narrow screens without wrapping
+ * the dot or theme-toggle to a new line. */
+.webui-header h1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-/* Toast container — fixed top-right, stacks downward. */
-#toasts {
-  position: fixed;
-  top: 1rem; right: 1rem;
-  z-index: 1000;
-  display: flex; flex-direction: column; gap: 0.5rem;
-  pointer-events: none;
-}
-#toasts > .toast {
-  padding: 0.6rem 1rem;
-  border-radius: var(--pico-border-radius);
-  background: var(--pico-card-background-color);
-  border: 1px solid var(--pico-card-border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  font-size: 0.9rem;
-  pointer-events: auto;
-}
-#toasts > .toast.ok    { border-color: var(--pico-color-green-500, #1a7f37); }
-#toasts > .toast.error { border-color: var(--pico-color-red-500,   #cf222e); }
