@@ -15,6 +15,14 @@ Provides:
 
 Pre-1.0. The API is stable enough that a consumer project (`esp32-homekey`) lives against it; expect breaking changes through 0.x.
 
+## Design philosophy
+
+Project-specific tabs, business panels, and product-flavoured admin pages live in the **consumer project**, not in this library. The lib provides infrastructure only — HTTP server bootstrap, Basic-Auth middleware, OTA, status core extension, embedded shell + Pico + Alpine. Consumers ship their own `panels.html` + `panels.js` via `EMBED_TXTFILES` and inject them through the panel-injection mechanism.
+
+The lib will not grow project-specific routes (e.g. a SIM7080G AT console, a multi-reader status grid, a Victron MPPT panel). When a candidate feature comes up, the test is: *would two unrelated consumer projects both want this verbatim?* If no — it stays in the consumer.
+
+This keeps the lib small, stable, and reusable. It also keeps consumer projects from inheriting features they don't want and from being entangled with each other's UX choices.
+
 ## Repo layout
 
 ```
