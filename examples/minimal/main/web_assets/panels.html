@@ -1,5 +1,44 @@
-<article x-data="hello" x-init="load()">
-  <header><strong>Hello panel</strong></header>
-  <p x-text="message">…</p>
-  <button @click="load()">Refresh</button>
-</article>
+<!-- Minimal demo of the toolkit primitives. Two tabs:
+       1. "Hello" — uses webui.poll on /api/hello
+       2. "Events" — uses webui.components.logViewer on /api/events
+     The shell's built-in /api/status card always renders above these.
+     Drop the [data-tab] attributes off and the sections fall back
+     to the legacy flat-list panel rendering — handy when you only
+     have one panel and don't want a nav strip. -->
+
+<section data-tab="hello" data-tab-label="Hello"
+         x-data="webui.poll({endpoint:'/api/hello', intervalMs:5000})">
+  <article>
+    <header><strong>Hello panel</strong></header>
+    <p x-text="data.message ?? '…'"></p>
+    <footer>
+      <button type="button" @click="refresh()">Refresh</button>
+      <small class="webui-muted" x-text="freshness" style="float:right"></small>
+    </footer>
+  </article>
+</section>
+
+<section data-tab="events" data-tab-label="Events"
+         x-data="webui.components.logViewer({
+                   endpoint:'/api/events',
+                   refreshMs:2000,
+                   maxLines:50,
+                   parser: (p) => Array.isArray(p) ? p
+                                  : (p.lines ?? [])
+                 })">
+  <article>
+    <header>
+      <strong>Event log</strong>
+      <label style="float:right">
+        <input type="checkbox" x-model="autoscroll"> autoscroll
+      </label>
+    </header>
+    <pre class="webui-log-pane" x-init="bind_pane($el)"
+         x-text="lines.join('\n') || 'no entries'"></pre>
+    <footer>
+      <button type="button" @click="refresh()">Refresh</button>
+      <button type="button" @click="clear()">Clear view</button>
+      <small class="webui-muted" x-text="freshness" style="float:right"></small>
+    </footer>
+  </article>
+</section>

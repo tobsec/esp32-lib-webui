@@ -51,6 +51,16 @@
     return body;
   }
 
+  // POST helper — serialises the body as JSON, sets the content-type,
+  // pipes through fetchAuth for error/parse handling.
+  async function postAuth(url, body) {
+    return fetchAuth(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body === undefined ? "" : JSON.stringify(body)
+    });
+  }
+
   // ---- Toast --------------------------------------------------------
 
   function toast_root() {
@@ -197,5 +207,164 @@
     };
   }
 
-  win.webui = { theme, fetchAuth, toast, tabs, poll, components: {} };
+  // ---- Component factories -----------------------------------------
+  //
+  // Higher-level Alpine x-data factories that compose poll + fetchAuth
+  // into common widget shapes. Used as x-data="webui.components.X({...})".
+  //
+  // Factory contract:
+  //   * return a plain object Alpine treats as a component scope.
+  //   * implement init()/destroy() for resource cleanup.
+  //   * surface reactive state with predictable names (lines, history,
+  //     sending, error, freshness, ...) so the HTML stays readable.
+  //
+  // Composition over specialisation: we deliberately ship few factories.
+  // Render an array of devices? Use webui.poll + <template x-for>.
+  // Need a select dropdown? Use webui.poll + a plain <select>. Only
+  // patterns whose state plumbing is genuinely repetitive get a factory:
+  // logViewer's line-cap + autoscroll, atConsole's history + sending +
+  // repeat flow. Everything else stays inline HTML over poll().
+
+  // logViewer({endpoint, refreshMs, parser, maxLines, autoscroll}):
+  //   Polls a log endpoint at refreshMs cadence. The endpoint may
+  //   return either a plain string of \n-separated lines or an array
+  //   of entries; parser(payload) → string[] decides. Buffer capped
+  //   at maxLines (default 200). Autoscrolls to bottom on each
+  //   refresh while .autoscroll is true (the user can toggle it off
+  //   via the bound checkbox/button to inspect history without the
+  //   feed pushing the scroll position around).
+  function logViewer(opts) {
+    const {
+      endpoint,
+      refreshMs = 2000,
+      maxLines  = 200,
+      autoscroll = true,
+      parser = (p) => (Array.isArray(p) ? p.map(String)
+                        : typeof p === "string" ? p.split(/\r?\n/)
+                        : [])
+    } = opts || {};
+    return {
+      lines: [],
+      autoscroll,
+      error: "",
+      fetched_at: 0,
+      _timer: null,
+      _pane: null,
+
+      get freshness() {
+        if (!this.fetched_at) return "";
+        const age = Math.round((Date.now() - this.fetched_at) / 1000);
+        return `updated ${age} s ago`;
+      },
+
+      async refresh() {
+        try {
+          const payload = await fetchAuth(endpoint);
+          let lines = parser(payload);
+          if (lines.length > maxLines) lines = lines.slice(-maxLines);
+          this.lines = lines;
+          this.error = "";
+          this.fetched_at = Date.now();
+          if (this.autoscroll && this._pane) {
+            // Queue after Alpine has rendered the new lines.
+            queueMicrotask(() => {
+              this._pane.scrollTop = this._pane.scrollHeight;
+            });
+          }
+        } catch (e) {
+          this.error = e.message;
+        }
+      },
+
+      toggle_autoscroll() { this.autoscroll = !this.autoscroll; },
+
+      clear() {
+        this.lines = [];
+        this.error = "";
+      },
+
+      bind_pane(el) { this._pane = el; },
+
+      init() {
+        this.refresh();
+        this._timer = setInterval(() => this.refresh(), refreshMs);
+      },
+
+      destroy() {
+        if (this._timer) { clearInterval(this._timer); this._timer = null; }
+      }
+    };
+  }
+
+  // atConsole({endpoint, historySize, defaultTimeoutMs}):
+  //   Single-line command input + send button + scrollback of past
+  //   commands. send() POSTs {cmd, timeout_ms} to endpoint, expects
+  //   {ok:bool, response:string} in return. The widget keeps a rolling
+  //   history of {cmd, response, ok, ts} entries; repeat(idx) re-sends
+  //   a previous command. Designed for SIM7080G's /api/at + similar
+  //   request/response consoles.
+  function atConsole(opts) {
+    const {
+      endpoint,
+      historySize = 50,
+      defaultTimeoutMs = 5000
+    } = opts || {};
+    return {
+      cmd: "",
+      timeout_ms: defaultTimeoutMs,
+      history: [],
+      sending: false,
+      error: "",
+
+      async send() {
+        const cmd = this.cmd.trim();
+        if (!cmd || this.sending) return;
+        this.sending = true;
+        this.error = "";
+        try {
+          const r = await postAuth(endpoint,
+                                   { cmd, timeout_ms: this.timeout_ms });
+          this._push({
+            cmd,
+            response: r.response || "",
+            ok: !!r.ok,
+            ts: Date.now()
+          });
+          this.cmd = "";
+        } catch (e) {
+          this.error = e.message;
+          this._push({ cmd, response: e.message, ok: false, ts: Date.now() });
+        } finally {
+          this.sending = false;
+        }
+      },
+
+      repeat(idx) {
+        const entry = this.history[idx];
+        if (!entry) return;
+        this.cmd = entry.cmd;
+        this.send();
+      },
+
+      clear() {
+        this.history = [];
+        this.error = "";
+      },
+
+      _push(entry) {
+        this.history.unshift(entry);   // newest first — easier to read
+        if (this.history.length > historySize) {
+          this.history.length = historySize;
+        }
+      },
+
+      init() {},
+      destroy() {}
+    };
+  }
+
+  win.webui = {
+    theme, fetchAuth, postAuth, toast, tabs, poll,
+    components: { logViewer, atConsole }
+  };
 })();

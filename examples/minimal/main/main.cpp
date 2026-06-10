@@ -47,10 +47,25 @@ esp_err_t handle_panels_js(httpd_req_t* req) {
     return ESP_OK;
 }
 
-// One project-specific REST endpoint, here just to demonstrate the pattern.
+// Two project-specific REST endpoints that the demo panels poll.
+// Trivial payloads — replace with real data plumbing in a real project.
 esp_err_t handle_hello(httpd_req_t* req) {
     httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, R"({"hello":"world"})");
+    httpd_resp_sendstr(req, R"({"message":"hello from the minimal example"})");
+    return ESP_OK;
+}
+esp_err_t handle_events(httpd_req_t* req) {
+    // Static array of lines for the demo. Real consumers would surface
+    // an actual event ring buffer (see components/syslog in
+    // esp32-homekey for the persistent-log pattern).
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, R"([
+      "00:00:01 boot reason=POWERON",
+      "00:00:02 wifi connecting…",
+      "00:00:08 wifi got IP 192.168.1.42",
+      "00:00:09 webui up",
+      "00:00:10 ota slot marked valid"
+    ])");
     return ESP_OK;
 }
 
@@ -94,6 +109,7 @@ void start_web_ui() {
     webui::register_route(server, HTTP_GET, "/panels.html", handle_panels_html);
     webui::register_route(server, HTTP_GET, "/panels.js",   handle_panels_js);
     webui::register_route(server, HTTP_GET, "/api/hello",   handle_hello);
+    webui::register_route(server, HTTP_GET, "/api/events",  handle_events);
 
     ESP_LOGI(TAG, "web UI up");
 }
