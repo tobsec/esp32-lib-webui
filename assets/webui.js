@@ -165,14 +165,31 @@
   // will hoist into its component scope. init() and destroy() match
   // Alpine's component lifecycle hooks.
 
+  // Pause discipline:
+  //   * always pause when document.visibilityState === 'hidden' (mobile
+  //     tab in background, screen off, etc.) — backgrounded UIs were
+  //     burning the modem's data budget for nothing.
+  //   * if a `tab` option is supplied, also pause when webui.tabs's
+  //     active tab doesn't match — keeps inactive-tab pollers quiet
+  //     while the user sits on a single tab (Brachberg has 8+ poll
+  //     factories; without this gate they all hammer the controller).
+  // The active-tab listener and visibilitychange handler both call
+  // refresh() on wake so the UI catches up promptly.
+  function _can_poll(tab) {
+    if (typeof document !== "undefined" && document.hidden) return false;
+    if (tab && tabs && tabs.current && tabs.current() !== tab) return false;
+    return true;
+  }
+
   function poll(opts) {
-    const { endpoint, intervalMs = 5000 } = opts || {};
+    const { endpoint, intervalMs = 5000, tab = null } = opts || {};
     return {
       data: {},
       error: "",
       fetched_at: 0,
       _timer: null,
       _tick: null,
+      _wake: null,
 
       get freshness() {
         if (!this.fetched_at) return "";
@@ -181,6 +198,7 @@
       },
 
       async refresh() {
+        if (!_can_poll(tab)) return;
         try {
           this.data = await fetchAuth(endpoint);
           this.error = "";
@@ -198,11 +216,19 @@
         this._tick = setInterval(() => {
           this.fetched_at = this.fetched_at;
         }, 1000);
+        this._wake = () => { if (_can_poll(tab)) this.refresh(); };
+        document.addEventListener("visibilitychange", this._wake);
+        if (tab) win.addEventListener("webui:tab", this._wake);
       },
 
       destroy() {
         if (this._timer) { clearInterval(this._timer); this._timer = null; }
         if (this._tick)  { clearInterval(this._tick);  this._tick  = null; }
+        if (this._wake) {
+          document.removeEventListener("visibilitychange", this._wake);
+          if (tab) win.removeEventListener("webui:tab", this._wake);
+          this._wake = null;
+        }
       }
     };
   }
@@ -239,6 +265,7 @@
       refreshMs = 2000,
       maxLines  = 200,
       autoscroll = true,
+      tab = null,
       parser = (p) => (Array.isArray(p) ? p.map(String)
                         : typeof p === "string" ? p.split(/\r?\n/)
                         : [])
@@ -250,6 +277,7 @@
       fetched_at: 0,
       _timer: null,
       _pane: null,
+      _wake: null,
 
       get freshness() {
         if (!this.fetched_at) return "";
@@ -258,6 +286,7 @@
       },
 
       async refresh() {
+        if (!_can_poll(tab)) return;
         try {
           const payload = await fetchAuth(endpoint);
           let lines = parser(payload);
@@ -266,7 +295,6 @@
           this.error = "";
           this.fetched_at = Date.now();
           if (this.autoscroll && this._pane) {
-            // Queue after Alpine has rendered the new lines.
             queueMicrotask(() => {
               this._pane.scrollTop = this._pane.scrollHeight;
             });
@@ -277,21 +305,24 @@
       },
 
       toggle_autoscroll() { this.autoscroll = !this.autoscroll; },
-
-      clear() {
-        this.lines = [];
-        this.error = "";
-      },
-
+      clear() { this.lines = []; this.error = ""; },
       bind_pane(el) { this._pane = el; },
 
       init() {
         this.refresh();
         this._timer = setInterval(() => this.refresh(), refreshMs);
+        this._wake = () => { if (_can_poll(tab)) this.refresh(); };
+        document.addEventListener("visibilitychange", this._wake);
+        if (tab) win.addEventListener("webui:tab", this._wake);
       },
 
       destroy() {
         if (this._timer) { clearInterval(this._timer); this._timer = null; }
+        if (this._wake) {
+          document.removeEventListener("visibilitychange", this._wake);
+          if (tab) win.removeEventListener("webui:tab", this._wake);
+          this._wake = null;
+        }
       }
     };
   }
